@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hazmelacompra</title>
+<style>
+  :root { --verde:#1f8a4c; --verde-osc:#166538; --fondo:#f5f7f6; --borde:#dfe5e1; --txt:#1b2a22; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--fondo); color:var(--txt); }
+  header { background:var(--verde); color:#fff; padding:14px 16px; position:sticky; top:0; z-index:5; }
+  header { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  header h1 { margin:0; font-size:1.25rem; }
+  #sesion { font-size:.85rem; text-align:right; }
+  #sesion button { background:rgba(255,255,255,.2); color:#fff; padding:3px 10px; margin-left:6px; }
+  .tabs { display:flex; gap:6px; margin-bottom:8px; }
+  .tabs button { background:#e8f3ec; color:var(--verde-osc); flex:1; }
+  .tabs button.on { background:var(--verde); color:#fff; }
+  .msg { font-size:.85rem; color:#b3261e; margin:6px 0 0; }
+  .miped { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-top:1px solid var(--borde); cursor:pointer; font-size:.9rem; }
+  header p { margin:2px 0 0; font-size:.85rem; opacity:.9; }
+  main { max-width:1000px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns: 1fr; }
+  @media (min-width: 860px) { main { grid-template-columns: 1.5fr 1fr; align-items:start; } }
+  .card { background:#fff; border:1px solid var(--borde); border-radius:12px; padding:14px; }
+  .card h2 { margin:0 0 10px; font-size:1.05rem; }
+  .tienda { margin-bottom:14px; }
+  .tienda h3 { margin:0 0 6px; font-size:.95rem; color:var(--verde-osc); }
+  .tienda small { color:#6b7a72; font-weight:normal; }
+  .prod { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 0; border-top:1px solid var(--borde); }
+  .prod:first-of-type { border-top:none; }
+  .prod .n { flex:1; }
+  .prod .p { color:#55645b; font-size:.9rem; white-space:nowrap; }
+  button { cursor:pointer; border:none; border-radius:8px; padding:7px 12px; font-size:.9rem; }
+  .btn { background:var(--verde); color:#fff; }
+  .btn:hover { background:var(--verde-osc); }
+  .btn:disabled { background:#a9b8af; cursor:not-allowed; }
+  .mini { background:#e8f3ec; color:var(--verde-osc); padding:4px 10px; }
+  .linea { display:flex; justify-content:space-between; align-items:center; gap:6px; padding:5px 0; font-size:.92rem; }
+  .linea .acc button { padding:2px 8px; }
+  .grupo { border-top:1px solid var(--borde); padding-top:8px; margin-top:8px; }
+  .grupo b { color:var(--verde-osc); }
+  .tot { display:flex; justify-content:space-between; padding:3px 0; }
+  .tot.final { font-weight:700; font-size:1.05rem; border-top:2px solid var(--borde); margin-top:6px; padding-top:8px; }
+  label { display:block; font-size:.85rem; margin:8px 0 2px; color:#43534a; }
+  input, select, textarea { width:100%; padding:8px; border:1px solid var(--borde); border-radius:8px; font:inherit; }
+  .vacio { color:#7b8a81; font-size:.9rem; }
+  .ok { background:#e8f3ec; border:1px solid #bfe0cb; border-radius:10px; padding:12px; }
+  .parada { padding:6px 0; border-top:1px dashed var(--borde); }
+  .badge { display:inline-block; background:var(--verde); color:#fff; border-radius:999px; padding:1px 9px; font-size:.78rem; margin-right:6px; }
+  .estado { display:inline-block; padding:2px 10px; border-radius:999px; background:#fff3cd; font-size:.8rem; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🛒 Hazmelacompra</h1>
+    <p>Tu compra de varios súper, en una sola entrega.</p>
+  </div>
+  <div id="sesion"></div>
+</header>
+
+<main>
+  <section class="card" id="catalogo"><h2>1. Elige tus productos</h2><div id="tiendas">Cargando…</div></section>
+
+  <section>
+    <div class="card" id="carrito">
+      <h2>2. Tu lista</h2>
+      <div id="lista"><p class="vacio">Aún no has añadido nada.</p></div>
+      <div id="totales"></div>
+    </div>
+
+    <div class="card" id="auth" style="margin-top:16px;display:none">
+      <h2>Entra para pedir</h2>
+      <div class="tabs"><button id="tabLogin" class="on">Entrar</button><button id="tabReg">Crear cuenta</button></div>
+      <div id="campoNombre" style="display:none"><label>Nombre</label><input id="regNombre" placeholder="Tu nombre" autocomplete="name"></div>
+      <label>Email</label><input id="email" type="email" autocomplete="email" placeholder="tu@email.com">
+      <label>Contraseña</label><input id="password" type="password" autocomplete="current-password" placeholder="Mínimo 8 caracteres">
+      <button class="btn" id="enviarAuth" style="width:100%;margin-top:12px">Entrar</button>
+      <p class="msg" id="authMsg"></p>
+    </div>
+
+    <div class="card" id="checkout" style="margin-top:16px">
+      <h2>3. Entrega</h2>
+      <label>Nombre</label><input id="cliente" placeholder="Tu nombre">
+      <label>Teléfono</label><input id="telefono" placeholder="600 000 000" inputmode="tel">
+      <label>Dirección de entrega</label><input id="direccion" placeholder="Calle, número, piso">
+      <label>Franja horaria</label>
+      <select id="franja">
+        <option>Hoy 18:00-20:00</option>
+        <option>Hoy 20:00-22:00</option>
+        <option>Mañana 10:00-12:00</option>
+        <option>Mañana 17:00-19:00</option>
+      </select>
+      <label>Notas (opcional)</label><textarea id="notas" rows="2" placeholder="Timbre roto, dejar con el portero…"></textarea>
+      <button class="btn" id="pedir" style="width:100%;margin-top:12px" disabled>Pedir entrega única</button>
+      <div id="resultado" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Mis pedidos</h2>
+      <div id="mispedidos"><p class="vacio">Entra para ver tus pedidos.</p></div>
+      <div id="seguimiento" style="margin-top:10px"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const eur = n => n.toFixed(2).replace('.', ',') + ' €';
+const FEE_BASE = 3.5, FEE_TIENDA = 1.5, GRATIS = 60;
+let catalogo = [];
+const carrito = {};              // producto_id -> {prod, tienda, cantidad}
+
+const $ = id => document.getElementById(id);
+
+// ---- sesión (token en localStorage, con tolerancia a que no esté disponible)
+let sesion = null;
+try { sesion = JSON.parse(localStorage.getItem('sesion') || 'null'); } catch (e) {}
+function guardarSesion(s) {
+  sesion = s;
+  try { s ? localStorage.setItem('sesion', JSON.stringify(s)) : localStorage.removeItem('sesion'); } catch (e) {}
+}
+async function api(url, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(sesion ? { Authorization: 'Bearer ' + sesion.token } : {}) };
+  const r = await fetch(url, { ...opts, headers });
+  if (r.status === 401 && sesion) { guardarSesion(null); pintarSesion(); }
+  return r;
+}
+let modoRegistro = false;
+function pintarSesion() {
+  $('sesion').innerHTML = sesion
+    ? `${sesion.nombre} <button id="logout">Salir</button>`
+    : '';
+  $('auth').style.display = sesion ? 'none' : 'block';
+  $('checkout').style.display = sesion ? 'block' : 'none';
+  if (sesion) { if (!$('cliente').value) $('cliente').value = sesion.nombre; cargarMisPedidos(); }
+  else $('mispedidos').innerHTML = '<p class="vacio">Entra para ver tus pedidos.</p>';
+  if ($('logout')) $('logout').onclick = async () => { await api('/api/logout', { method: 'POST' }); guardarSesion(null); $('seguimiento').innerHTML = ''; pintarSesion(); };
+}
+function modo(reg) {
+  modoRegistro = reg;
+  $('tabLogin').classList.toggle('on', !reg); $('tabReg').classList.toggle('on', reg);
+  $('campoNombre').style.display = reg ? 'block' : 'none';
+  $('enviarAuth').textContent = reg ? 'Crear cuenta' : 'Entrar';
+  $('password').autocomplete = reg ? 'new-password' : 'current-password';
+  $('authMsg').textContent = '';
+}
+$('tabLogin').onclick = () => modo(false);
+$('tabReg').onclick = () => modo(true);
+$('enviarAuth').onclick = async () => {
+  const body = modoRegistro
+    ? { email: $('email').value.trim(), nombre: $('regNombre').value.trim(), password: $('password').value }
+    : { email: $('email').value.trim(), password: $('password').value };
+  const r = await fetch(modoRegistro ? '/api/registro' : '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    $('authMsg').textContent = r.status === 422 ? 'Revisa el email, el nombre y que la contraseña tenga 8 caracteres o más.' : (e.detail || 'Error');
+    return;
+  }
+  const d = await r.json();
+  if (d.rol === 'repartidor') { $('authMsg').textContent = 'Esta cuenta es de repartidor: usa /repartidor.'; return; }
+  guardarSesion(d); $('password').value = ''; pintarSesion();
+};
+
+async function cargar() {
+  catalogo = await (await fetch('/api/catalogo')).json();
+  $('tiendas').innerHTML = catalogo.map(t => `
+    <div class="tienda">
+      <h3>${t.nombre} <small>· ${t.direccion}</small></h3>
+      ${t.productos.map(p => `
+        <div class="prod">
+          <span class="n">${p.nombre}</span>
+          <span class="p">${eur(p.precio)}/${p.unidad}</span>
+          <button class="mini" onclick="anadir(${p.id})">+ Añadir</button>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function anadir(id) {
+  for (const t of catalogo) {
+    const p = t.productos.find(x => x.id === id);
+    if (p) {
+      carrito[id] = carrito[id] || { prod: p, tienda: t, cantidad: 0 };
+      carrito[id].cantidad++;
+    }
+  }
+  pintar();
+}
+function cambiar(id, d) {
+  carrito[id].cantidad += d;
+  if (carrito[id].cantidad <= 0) delete carrito[id];
+  pintar();
+}
+
+function calcular() {
+  const items = Object.values(carrito);
+  const subtotal = items.reduce((s, i) => s + i.prod.precio * i.cantidad, 0);
+  const tiendas = new Set(items.map(i => i.tienda.id)).size;
+  const tarifa = !items.length ? 0 : subtotal >= GRATIS ? 0 : FEE_BASE + FEE_TIENDA * Math.max(0, tiendas - 1);
+  return { items, subtotal, tiendas, tarifa, total: subtotal + tarifa };
+}
+
+function pintar() {
+  const { items, subtotal, tiendas, tarifa, total } = calcular();
+  if (!items.length) {
+    $('lista').innerHTML = '<p class="vacio">Aún no has añadido nada.</p>';
+    $('totales').innerHTML = ''; $('pedir').disabled = true; return;
+  }
+  const grupos = {};
+  items.forEach(i => (grupos[i.tienda.nombre] ||= []).push(i));
+  $('lista').innerHTML = Object.entries(grupos).map(([n, its]) => `
+    <div class="grupo"><b>${n}</b>
+      ${its.map(i => `
+        <div class="linea">
+          <span>${i.cantidad} × ${i.prod.nombre}</span>
+          <span class="acc">${eur(i.prod.precio * i.cantidad)}
+            <button class="mini" onclick="cambiar(${i.prod.id},-1)">−</button>
+            <button class="mini" onclick="cambiar(${i.prod.id},1)">+</button>
+          </span>
+        </div>`).join('')}
+    </div>`).join('');
+  $('totales').innerHTML = `
+    <div class="grupo">
+      <div class="tot"><span>Subtotal (${tiendas} tienda${tiendas > 1 ? 's' : ''})</span><span>${eur(subtotal)}</span></div>
+      <div class="tot"><span>Entrega única</span><span>${tarifa ? eur(tarifa) : 'Gratis'}</span></div>
+      <div class="tot final"><span>Total</span><span>${eur(total)}</span></div>
+      ${subtotal < GRATIS ? `<small class="vacio">Envío gratis a partir de ${eur(GRATIS)}</small>` : ''}
+    </div>`;
+  $('pedir').disabled = false;
+}
+
+$('pedir').onclick = async () => {
+  const items = Object.values(carrito).map(i => ({ producto_id: i.prod.id, cantidad: i.cantidad }));
+  const body = {
+    cliente: $('cliente').value.trim(), telefono: $('telefono').value.trim(),
+    direccion_entrega: $('direccion').value.trim(), franja: $('franja').value,
+    notas: $('notas').value.trim() || null, items,
+  };
+  const r = await api('/api/pedidos', { method: 'POST', body: JSON.stringify(body) });
+  if (!r.ok) {
+    $('resultado').innerHTML = '<div class="ok" style="background:#fdecea;border-color:#f3b8b1">Revisa nombre, teléfono y dirección.</div>';
+    return;
+  }
+  const p = await r.json();
+  $('resultado').innerHTML = `<div class="ok"><b>¡Pedido ${p.id} creado!</b><br>
+    Recogeremos en ${p.paradas.length} tienda(s) y te lo llevamos todo junto · ${p.franja}.<br>
+    Total: <b>${eur(p.total)}</b></div>`;
+  for (const k in carrito) delete carrito[k];
+  pintar();
+  cargarMisPedidos();
+};
+
+async function cargarMisPedidos() {
+  const r = await api('/api/mis-pedidos');
+  if (!r.ok) return;
+  const ps = await r.json();
+  $('mispedidos').innerHTML = ps.length
+    ? ps.map(p => `<div class="miped" onclick="verPedido('${p.id}')"><span><b>#${p.id}</b> · ${p.creado.slice(0, 10)}</span><span><span class="estado">${p.estado.replace('_', ' ')}</span> ${eur(p.total)}</span></div>`).join('')
+    : '<p class="vacio">Todavía no tienes pedidos.</p>';
+}
+async function verPedido(id) {
+  const r = await api('/api/pedidos/' + encodeURIComponent(id));
+  if (!r.ok) { $('seguimiento').innerHTML = '<p class="vacio">No encontramos ese pedido.</p>'; return; }
+  const p = await r.json();
+  $('seguimiento').innerHTML = `
+    <p><b>${p.id}</b> <span class="estado">${p.estado.replace('_', ' ')}</span><br>
+    ${p.direccion_entrega} · ${p.franja}</p>
+    ${p.paradas.map(par => `
+      <div class="parada"><span class="badge">${par.parada}</span><b>${par.tienda}</b>
+        <small class="vacio">${par.direccion}</small>
+        ${par.items.map(i => `<div class="linea"><span>${i.recogido ? '✅' : '⬜'} ${i.cantidad} × ${i.nombre}</span></div>`).join('')}
+      </div>`).join('')}
+    <div class="tot final"><span>Total</span><span>${eur(p.total)}</span></div>`;
+}
+
+pintarSesion();
+if (sesion) api('/api/me').then(r => { if (!r.ok) { guardarSesion(null); pintarSesion(); } });
+cargar();
+</script>
+</body>
+</html>
